@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+backend/.venv/
+backend/.uv-cache/
+
+# Node / Bun (CLI)
+node_modules/
+cli/node_modules/
+
+# smolduck workspace artifacts (generated at runtime)
+.smolduck/
+
+# large perf-test fixture (generated on demand, not committed)
+fixtures/large.parquet
+
+# OS / editor
+.DS_Store
+
+# e2e browser test harness
+.e2e/
+
+# packed VM artifact (built on demand, large)
+image/smolduck
+image/*.smolmachine
+.playwright-mcp/
+.playwright-mcp/*

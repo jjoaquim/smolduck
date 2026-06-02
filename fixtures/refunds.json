@@ -1,0 +1,8 @@
+[
+  {"refund_id": 1, "order_id": 1003, "amount": 49.90, "reason": "damaged", "refund_date": "2024-04-05"},
+  {"refund_id": 2, "order_id": 1009, "amount": 120.00, "reason": "late_delivery", "refund_date": "2024-05-18"},
+  {"refund_id": 3, "order_id": 1015, "amount": 12.50, "reason": "wrong_item", "refund_date": "2024-06-02"},
+  {"refund_id": 4, "order_id": 1021, "amount": 300.00, "reason": "damaged", "refund_date": "2024-07-11"},
+  {"refund_id": 5, "order_id": 1027, "amount": 75.25, "reason": "changed_mind", "refund_date": "2024-08-09"},
+  {"refund_id": 6, "order_id": 1030, "amount": 18.00, "reason": "wrong_item", "refund_date": "2024-08-22"}
+]

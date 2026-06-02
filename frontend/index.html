@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>smolduck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <!-- No build step: pinned ESM import map. CodeMirror packages use ?deps so
+         every @codemirror/* shares one @codemirror/state and @codemirror/view
+         instance (CM6 requires singletons). -->
+    <script type="importmap">
+      {
+        "imports": {
+          "preact": "https://esm.sh/preact@10.29.2",
+          "preact/hooks": "https://esm.sh/preact@10.29.2/hooks?deps=preact@10.29.2",
+          "htm/preact": "https://esm.sh/htm@3.1.1/preact?deps=preact@10.29.2",
+          "@codemirror/state": "https://esm.sh/@codemirror/state@6.6.0",
+          "@codemirror/view": "https://esm.sh/@codemirror/view@6.43.0?deps=@codemirror/state@6.6.0",
+          "@codemirror/language": "https://esm.sh/@codemirror/language@6.12.3?deps=@codemirror/state@6.6.0,@codemirror/view@6.43.0",
+          "@codemirror/commands": "https://esm.sh/@codemirror/commands@6.10.3?deps=@codemirror/state@6.6.0,@codemirror/view@6.43.0",
+          "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete@6.20.2?deps=@codemirror/state@6.6.0,@codemirror/view@6.43.0,@codemirror/language@6.12.3",
+          "@codemirror/lang-sql": "https://esm.sh/@codemirror/lang-sql@6.10.0?deps=@codemirror/state@6.6.0,@codemirror/view@6.43.0,@codemirror/language@6.12.3,@codemirror/autocomplete@6.20.2",
+          "plotly.js-dist-min": "https://esm.sh/plotly.js-dist-min@2.35.3"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

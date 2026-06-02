@@ -1,0 +1,13 @@
+customer_id,name,region,segment,signup_date
+1,Ada Lovelace,North,enterprise,2024-01-15
+2,Alan Turing,South,smb,2024-02-03
+3,Grace Hopper,East,enterprise,2024-02-19
+4,Katherine Johnson,West,consumer,2024-03-07
+5,Edsger Dijkstra,North,smb,2024-03-22
+6,Barbara Liskov,South,enterprise,2024-04-11
+7,Donald Knuth,East,consumer,2024-04-28
+8,Margaret Hamilton,West,enterprise,2024-05-09
+9,John von Neumann,North,smb,2024-05-30
+10,Radia Perlman,South,consumer,2024-06-14
+11,Tim Berners-Lee,East,smb,2024-07-02
+12,Hedy Lamarr,West,enterprise,2024-07-21

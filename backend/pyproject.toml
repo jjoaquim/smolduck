@@ -1,0 +1,41 @@
+[project]
+name = "smolduck-backend"
+version = "0.1.0"
+description = "smolduck backend — DuckDB engine + FastAPI workbench server (runs inside the microVM)"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.1",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "polars>=1.0",
+    "pandas>=2.2",
+    "pyarrow>=17.0",
+    # Python kernel: figures + baseline ML. Run only inside the VM.
+    "plotly>=5.22",
+    "scikit-learn>=1.5",
+    # AI analyst (optional, pluggable provider). Anthropic is BYO-key and
+    # needs egress to api.anthropic.com; the Ollama provider talks to its /api/chat
+    # over httpx (already pulled in by anthropic) — no extra dependency.
+    "anthropic>=0.40",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# The shared system uv cache (~/.cache/uv) has root-owned subdirs on this host,
+# so use a project-local cache to keep `uv` working without sudo.
+[tool.uv]
+cache-dir = ".uv-cache"
