@@ -288,6 +288,35 @@ Your data lives in DuckDB; everything else is a plain, git-friendly file in
 | `experiments.jsonl` | one ML run per line |
 | `store.duckdb` | the DuckDB database (views + materialized tables) |
 
+## Drive it with agents (MCP)
+
+smolduck ships an [MCP](https://modelcontextprotocol.io) server ([`mcp/`](mcp/)) so
+any MCP-capable agent — Claude Desktop/Code, Cursor, your own — can use it as a tool:
+query data, run **sandboxed** Python, profile, build charts, run baseline ML, and
+export reports. The agent brings the model; smolduck brings the engine and the safety
+boundary (agent code runs only in the microVM, never on your host).
+
+Start a session, then point your MCP client at it:
+
+```bash
+smolduck run ./your-data        # the MCP server attaches to this session
+```
+
+```json
+{
+  "mcpServers": {
+    "smolduck": {
+      "command": "uvx",
+      "args": ["--from", "/abs/path/to/smolduck/mcp", "smolduck-mcp",
+               "--workspace", "/abs/path/to/your-data"]
+    }
+  }
+}
+```
+
+The server talks only to `127.0.0.1` (the backend is unauthenticated — don't expose
+it remotely). See [`mcp/README.md`](mcp/README.md) for the full tool list.
+
 ## Security model
 
 The hard rule: **untrusted code only ever runs inside the microVM.** The Python kernel and
@@ -323,6 +352,7 @@ The frontend is no-build: Preact + htm + CodeMirror 6 + Plotly via a pinned ESM 
 backend/    FastAPI + DuckDB engine, Python kernel, ML, agent, export  (runs in the VM)
 frontend/   no-build Preact + htm SPA (notebook, charts, profile, ML, agent panels)
 cli/        the `smolduck` command (TypeScript on Bun) — boot/stop/status/build
+mcp/        MCP server (Python) — drive a running session from external agents
 image/      provision.sh, entrypoint.sh, vendor_assets.py — bake the microVM image
 examples/   ready-to-run demo datasets (ecommerce, churn) + their generator
 fixtures/   small sample data used by the test suite (customers/orders/refunds)
