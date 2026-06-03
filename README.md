@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/blog/smolduck-logo.png" alt="smolduck" width="160" />
+  <img src="docs/smolduck-logo.png" alt="smolduck" width="160" />
   <h1>smolduck</h1>
   <p><strong>A data analyst in a box.</strong> One command boots a disposable microVM running DuckDB plus a no-build browser workbench — SQL, charts, EDA, a Python scratchpad, and baseline ML. Untrusted code runs only inside the sandbox; your host is never touched.</p>
 </div>
@@ -356,7 +356,7 @@ mcp/        MCP server (Python) — drive a running session from external agents
 image/      provision.sh, entrypoint.sh, vendor_assets.py — bake the microVM image
 examples/   ready-to-run demo datasets (ecommerce, churn) + their generator
 fixtures/   small sample data used by the test suite (customers/orders/refunds)
-docs/       the blog post and logo
+docs/       the logo
 ```
 
 ## Status
