@@ -41,7 +41,7 @@ your host ─┬─ smolduck (the CLI — the only thing that runs on your machi
 
 ## Requirements
 
-- [**smolvm**](https://smolvm.com) on your `PATH` (the microVM runtime).
+- [**smolvm**](https://github.com/smol-machines/smolvm) on your `PATH` (the microVM runtime).
 - [**Bun**](https://bun.sh) ≥ 1.3 — runs the CLI directly; no `bun install` needed.
 - For development / building the image: [**uv**](https://docs.astral.sh/uv/) (Python 3.12) and network access.
 
