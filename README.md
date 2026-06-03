@@ -46,7 +46,25 @@ your host ─┬─ smolduck (the CLI — the only thing that runs on your machi
 - [**Bun**](https://bun.sh) ≥ 1.3 — runs the CLI directly; no `bun install` needed.
 - For development / building the image: [**uv**](https://docs.astral.sh/uv/) (Python 3.12) and network access.
 
-The CLI is run via Bun. For brevity the examples below assume a shell alias:
+## Install
+
+```bash
+git clone https://github.com/jjoaquim/smolduck && cd smolduck
+make install
+```
+
+That's the whole thing. `make install` auto-installs any missing prerequisites (Bun, uv,
+smolvm) via their official installers, puts a `smolduck` command on your `PATH`
+(`~/.local/bin`; override with `make install PREFIX=/usr/local`), and bakes the microVM
+image. If `~/.local/bin` isn't on your `PATH`, it prints the one line to add. Other targets:
+
+- `make check` — verify your platform + prerequisites without installing anything
+- `make build` — re-bake the image after changing the backend or frontend
+- `make mcp-setup` — prepare the MCP server and print its client config
+- `make uninstall` — remove the `smolduck` command
+
+Prefer to wire it up by hand? The Requirements above are everything you need; the CLI runs
+straight from source via Bun, so a shell alias is enough:
 
 ```bash
 alias smolduck='bun /path/to/smolduck/cli/src/index.ts'
