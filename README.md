@@ -12,7 +12,7 @@ smolduck run ./sales      # boots a VM, registers every file, opens the workbenc
 smolduck stop ./sales     # VM evaporates; your workspace folder is left intact
 ```
 
-`smolduck run ./data` boots a [smolvm](https://smolvm.com) microVM in a couple hundred
+`smolduck run ./data` boots a [smolvm](https://github.com/smol-machines/smolvm) microVM in a couple hundred
 milliseconds, mounts the folder, and opens a browser workbench. Every CSV / Parquet / JSON
 file is already a queryable DuckDB view — no import step. You analyze; you stop; the box is
 gone and nothing was installed or executed on your machine.
