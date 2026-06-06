@@ -4,6 +4,24 @@ All notable changes to smolduck are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0]
+
+### Added
+
+- **Reproducible tables (DuckLake).** Managed/derived tables — ones you or an agent
+  `CREATE TABLE lake.…`, or materialize via `POST /api/lake/materialize` — now live
+  in a local [DuckLake](https://ducklake.select) under `.smolduck/`: catalog
+  metadata in a local file, data as Parquet, fully offline. Every write is a
+  snapshot, so a notebook records the version it ran against and
+  `smolduck replay <notebook> --reproduce` re-attaches the lake *as of* that
+  snapshot and reproduces its managed-table results exactly — even after the data
+  changed. Direct time travel works too (`… FROM lake.t AT (VERSION => N)`).
+  `GET /api/lake/status` and `GET /api/lake/snapshots` expose the lake state.
+- Raw file sources are unchanged (still views reflecting current file contents).
+  The lake is additive — `store.duckdb` is retained — and optional: set
+  `SMOLDUCK_LAKE=0` to disable it. It degrades gracefully when the `ducklake`
+  extension or a writable workspace isn't available.
+
 ## [0.2.0]
 
 ### Added

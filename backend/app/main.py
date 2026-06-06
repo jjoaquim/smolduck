@@ -23,6 +23,7 @@ from . import (
     export,
     history,
     kernel_api,
+    lake,
     ml,
     notebooks,
     query,
@@ -145,6 +146,7 @@ def create_app() -> FastAPI:
     app.include_router(export.router)
     app.include_router(history.router)
     app.include_router(examples.router)
+    app.include_router(lake.router)
 
     # Mount the static frontend last so /api/* routes take precedence.
     frontend = _frontend_dir()

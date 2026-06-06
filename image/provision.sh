@@ -17,8 +17,8 @@ cp -r /src/backend/app /app/app
 echo "[provision] vendoring frontend assets (offline) -> /app/frontend"
 python3 /src/image/vendor_assets.py --src-frontend /src/frontend --out /app/frontend
 
-echo "[provision] pre-installing DuckDB extensions (httpfs, excel)"
-python3 -c "import duckdb; c=duckdb.connect(); c.execute('INSTALL httpfs; INSTALL excel;'); print('  extensions installed')"
+echo "[provision] pre-installing DuckDB extensions (httpfs, excel, ducklake)"
+python3 -c "import duckdb; c=duckdb.connect(); c.execute('INSTALL httpfs; INSTALL excel; INSTALL ducklake;'); print('  extensions installed')"
 
 echo "[provision] installing entrypoint"
 cp /src/image/entrypoint.sh /app/entrypoint.sh

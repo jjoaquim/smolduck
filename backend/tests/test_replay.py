@@ -73,3 +73,33 @@ def test_replay_bad_sql_records_error(workspace):
 def test_replay_unknown_notebook_404(workspace):
     with TestClient(create_app()) as client:
         assert client.post("/api/notebooks/deadbeef/replay").status_code == 404
+
+
+def test_replay_reproduce_pins_lake_snapshot(workspace):
+    """A HEAD replay records the lake snapshot; --reproduce pins reads to it so the
+    managed-table result reproduces exactly even after the table changes."""
+    with TestClient(create_app()) as client:
+        if not client.get("/api/lake/status").json().get("enabled"):
+            import pytest
+            pytest.skip("ducklake extension unavailable")
+
+        client.post("/api/query", json={"sql": "CREATE TABLE lake.sales AS SELECT 10 AS amt"})
+        cells = [{"kind": "sql", "source": "SELECT sum(amt) AS total FROM lake.sales"}]
+        nb = client.post("/api/notebooks", json={"title": "Lake", "cells": cells}).json()
+
+        # HEAD replay: result reflects current data and the notebook is pinned.
+        head = client.post(f"/api/notebooks/{nb['id']}/replay").json()
+        assert head["cells"][0]["last_result"]["rows"] == [[10]]
+        assert head["lake_snapshot"] is not None
+
+        # Mutate the managed table (advances the lake to a newer snapshot).
+        client.post("/api/query", json={"sql": "INSERT INTO lake.sales VALUES (5)"})
+
+        # Reproduce: pinned to the recorded snapshot → the OLD total.
+        repro = client.post(f"/api/notebooks/{nb['id']}/replay?reproduce=true").json()
+        assert repro["cells"][0]["last_result"]["rows"] == [[10]]
+
+        # Default HEAD replay now sees the new data and re-pins.
+        fresh = client.post(f"/api/notebooks/{nb['id']}/replay").json()
+        assert fresh["cells"][0]["last_result"]["rows"] == [[15]]
+        assert fresh["lake_snapshot"] >= head["lake_snapshot"]

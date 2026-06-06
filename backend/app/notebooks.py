@@ -60,6 +60,10 @@ class Notebook(BaseModel):
     created_at: str = Field(default_factory=_now_iso)
     updated_at: str = Field(default_factory=_now_iso)
     cells: list[Cell] = Field(default_factory=list)
+    # DuckLake snapshot version this notebook's managed-table results correspond to
+    # (set on replay). `smolduck replay --reproduce` re-attaches the lake as of this
+    # version so the run reproduces exactly. None until first replayed with a lake.
+    lake_snapshot: int | None = None
 
 
 class CellInput(BaseModel):

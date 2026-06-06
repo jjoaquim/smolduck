@@ -37,6 +37,7 @@ your host ─┬─ smolduck (the CLI — the only thing that runs on your machi
 - **Baseline ML.** Pick a target + features → models scored against a dummy baseline, with feature importance; every run logged to `experiments.jsonl`.
 - **Optional AI analyst.** Pluggable LLM — a hosted **Anthropic** key or a local **Ollama** model → ask in natural language, get a **reviewed** SQL/Python cell (never auto-run). Not configured, not shown.
 - **Export.** Notebook → self-contained HTML report (opens offline); results → CSV/Parquet; charts → PNG/SVG.
+- **Reproducible managed tables.** Derived tables live in a local [DuckLake](https://ducklake.select) (offline); every write is a snapshot, so `smolduck replay --reproduce` reproduces a notebook's results exactly, and you can time-travel with `… AT (VERSION => N)`.
 - **Disposable & reproducible.** Everything but your data is plain files in `.smolduck/`; stop and re-run restores sources, notebooks, and charts exactly.
 
 ## Requirements
@@ -284,7 +285,8 @@ smolduck run [path]                boot the workbench against a workspace folder
 smolduck stop [path]               stop the running session; the workspace is left intact
 smolduck status [path]             show the running session for a workspace
 smolduck replay <notebook> [path]  re-run a saved notebook headless against the running
-                                   session; add --out report.html to write a report
+                                   session; --out report.html writes a report,
+                                   --reproduce pins reads to its DuckLake snapshot
 smolduck build                     (re)build the microVM image + pack
 
 Flags (run):
@@ -307,6 +309,21 @@ Your data lives in DuckDB; everything else is a plain, git-friendly file in
 | `charts/*.json` | pinned Plotly spec + originating query + title |
 | `experiments.jsonl` | one ML run per line |
 | `store.duckdb` | the DuckDB database (views + materialized tables) |
+| `lake.ducklake` + `lake_files/` | the workspace [DuckLake](https://ducklake.select) — managed tables + their snapshots (optional) |
+
+### Reproducible tables (DuckLake)
+
+Managed tables — ones you (or an agent) `CREATE TABLE lake.…`, or materialize via
+`POST /api/lake/materialize` — live in a local [DuckLake](https://ducklake.select):
+metadata in a local catalog, data as Parquet under `.smolduck/`, fully offline.
+Every write is a **snapshot**, so a notebook records the version it ran against and
+`smolduck replay <notebook> --reproduce` re-attaches the lake *as of* that snapshot
+and reproduces its managed-table results exactly — even after the data changed. You
+can also time-travel directly: `SELECT … FROM lake.t AT (VERSION => N)`.
+
+Raw file sources stay as views and reflect the files' *current* contents; to freeze
+those into the lake, materialize them. The lake is optional — set `SMOLDUCK_LAKE=0`
+to disable it; `store.duckdb` is unaffected either way.
 
 ## Drive it with agents (MCP)
 

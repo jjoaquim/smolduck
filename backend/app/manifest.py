@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-SCHEMA_VERSION = "0.2.0"
+SCHEMA_VERSION = "0.3.0"
 SMOLDUCK_DIRNAME = ".smolduck"
 MANIFEST_FILENAME = "manifest.json"
 WORKSPACE_ENV = "SMOLDUCK_WORKSPACE"

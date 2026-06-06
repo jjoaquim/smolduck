@@ -28,6 +28,12 @@ class AppState:
         # The Python kernel subprocess (lazily created; only inside the VM). Typed
         # loosely to avoid importing kernel here.
         self.kernel = None
+        # Attach the workspace's local DuckLake as the `lake` catalog (managed
+        # tables + snapshots). Best-effort: disabled gracefully if the extension
+        # or a writable workspace isn't available. Lazy import avoids a cycle
+        # (lake's routes import this module).
+        from . import lake
+        self.lake = lake.attach_lake(self.db, self.workspace)
 
     def save(self) -> None:
         save_manifest(self.workspace, self.manifest)

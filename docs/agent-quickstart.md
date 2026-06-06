@@ -70,6 +70,14 @@ smolduck replay <notebook-id> --out report.html
 Cells (including Python) re-execute inside the live microVM and the report is
 regenerated — CI-friendly, no browser.
 
+If the analysis builds on **managed tables** (`CREATE TABLE lake.…` or a
+materialized query), add `--reproduce` to pin those reads to the DuckLake snapshot
+the notebook recorded, so the run reproduces *exactly* even after the data changed:
+
+```bash
+smolduck replay <notebook-id> --reproduce --out report.html
+```
+
 ## Why this is safe
 
 `run_python`, `run_ml_experiment`, and `replay` all execute inside the microVM,

@@ -7,6 +7,8 @@ export interface ReplayOptions extends CliOptions {
   notebook?: string;
   /** When set, write the rendered HTML report here instead of printing a summary. */
   out?: string;
+  /** Pin managed-table reads to the notebook's recorded DuckLake snapshot. */
+  reproduce?: boolean;
 }
 
 /** Re-run a saved notebook headless against the *already running* session and
@@ -31,9 +33,12 @@ export async function replayCommand(opts: ReplayOptions): Promise<void> {
 
   const base = `http://127.0.0.1:${session.port}`;
   const wantHtml = !!opts.out;
+  const params = new URLSearchParams();
+  if (wantHtml) params.set("export", "true");
+  if (opts.reproduce) params.set("reproduce", "true");
+  const qs = params.toString();
   const url =
-    `${base}/api/notebooks/${encodeURIComponent(opts.notebook)}/replay` +
-    (wantHtml ? "?export=true" : "");
+    `${base}/api/notebooks/${encodeURIComponent(opts.notebook)}/replay` + (qs ? `?${qs}` : "");
 
   let resp: Response;
   try {

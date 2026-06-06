@@ -23,6 +23,7 @@ Flags:
   --mem <size>   microVM memory (e.g. 2g, 2048m)
   --cpus <n>     microVM vCPUs
   --out <file>   replay: write the rendered HTML report to <file>
+  --reproduce    replay: pin managed-table reads to the notebook's recorded DuckLake snapshot
   -h, --help     show this help
 `;
 
@@ -37,6 +38,7 @@ async function main(): Promise<void> {
       mem: { type: "string" },
       cpus: { type: "string" },
       out: { type: "string" },
+      reproduce: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
@@ -75,6 +77,7 @@ async function main(): Promise<void> {
         path: positionals[2] ?? ".",
         notebook: pathArg,
         out: values.out,
+        reproduce: !!values.reproduce,
       });
       break;
     case "build":
