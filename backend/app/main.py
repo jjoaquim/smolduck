@@ -16,7 +16,19 @@ from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.types import Scope
 
-from . import agent, charts, export, kernel_api, ml, notebooks, query, sources
+from . import (
+    agent,
+    charts,
+    examples,
+    export,
+    history,
+    kernel_api,
+    ml,
+    notebooks,
+    query,
+    replay,
+    sources,
+)
 from .manifest import SCHEMA_VERSION, ensure_smolduck_dir, manifest_path, resolve_workspace_dir
 from .state import AppState, get_state
 
@@ -125,11 +137,14 @@ def create_app() -> FastAPI:
     app.include_router(sources.router)
     app.include_router(query.router)
     app.include_router(notebooks.router)
+    app.include_router(replay.router)
     app.include_router(kernel_api.router)
     app.include_router(charts.router)
     app.include_router(ml.router)
     app.include_router(agent.router)
     app.include_router(export.router)
+    app.include_router(history.router)
+    app.include_router(examples.router)
 
     # Mount the static frontend last so /api/* routes take precedence.
     frontend = _frontend_dir()

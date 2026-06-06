@@ -45,6 +45,7 @@ export const api = {
   restartKernel: () => sendJSON("POST", "/api/kernel/restart", {}),
 
   agentStatus: () => getJSON("/api/agent/status"),
+  agentEgress: () => getJSON("/api/agent/egress"),
   agentAsk: (question) => sendJSON("POST", "/api/agent/ask", { question }),
 
   runExperiment: (body) => sendJSON("POST", "/api/ml/experiments", body),
@@ -57,6 +58,14 @@ export const api = {
   updateNotebook: (id, body) => sendJSON("PUT", `/api/notebooks/${encodeURIComponent(id)}`, body),
   deleteNotebook: (id) =>
     fetch(`/api/notebooks/${encodeURIComponent(id)}`, { method: "DELETE" }).then((r) => r.json()),
+
+  listHistory: (limit = 50) => getJSON(`/api/history?limit=${limit}`),
+  addHistory: (entry) => sendJSON("POST", "/api/history", entry),
+  clearHistory: () => fetch("/api/history", { method: "DELETE" }).then((r) => r.json()),
+
+  listExamples: () => getJSON("/api/examples"),
+  loadExample: (name) =>
+    sendJSON("POST", `/api/examples/load?name=${encodeURIComponent(name)}`, {}),
 };
 
 // Trigger a browser download for a URL (used for the notebook HTML export,

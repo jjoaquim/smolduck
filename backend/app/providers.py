@@ -37,6 +37,7 @@ import os
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-4-8"
 DEFAULT_OLLAMA_HOST = "http://localhost:11434"
 DEFAULT_OLLAMA_MODEL = "llama3.1"
+ANTHROPIC_HOST = "api.anthropic.com"
 
 MAX_TOKENS = 2048
 
@@ -241,3 +242,28 @@ def get_provider() -> Provider | None:
 def provider_info() -> dict | None:
     p = get_provider()
     return {"provider": p.name, "model": p.model} if p else None
+
+
+def provider_host(provider: Provider | None) -> str | None:
+    """The single host a provider phones (for the egress log/badge), or None."""
+    if provider is None:
+        return None
+    if provider.name == "ollama":
+        return getattr(provider, "host", None)
+    return ANTHROPIC_HOST
+
+
+def egress_policy() -> dict:
+    """How much network the configured analyst opens in the sandbox.
+
+    Mirrors the CLI's `egressPolicy()`/`analystEgressFlags()` so the UI badge, the
+    boot receipt, and the actual smolvm flags can never disagree. Offline whenever
+    no provider is configured (or fake mode), since then nothing phones out."""
+    if os.environ.get("SMOLDUCK_AGENT_FAKE") == "1":
+        return {"policy": "offline", "allowed_hosts": []}
+    name = _selected_name()
+    if name == "ollama":
+        return {"policy": "local-only", "allowed_hosts": [OllamaProvider().host]}
+    if name == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
+        return {"policy": "allow-host", "allowed_hosts": [ANTHROPIC_HOST]}
+    return {"policy": "offline", "allowed_hosts": []}

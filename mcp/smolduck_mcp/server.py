@@ -15,6 +15,7 @@ Tool surface (analyze + create artifacts; no deletes):
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 from typing import Any, Callable
@@ -51,6 +52,58 @@ def _guard(fn: Callable[[SmolduckClient], Any]) -> Any:
 def _out_path(out_path: str | None, default_name: str) -> Path:
     p = Path(out_path) if out_path else Path(_cfg["workspace"] or ".") / default_name
     return p.expanduser().resolve()
+
+
+def _resource(fn: Callable[[SmolduckClient], Any]) -> str:
+    """Run a resource body and return its JSON text. Resources are read-only
+    *content* (not actions), so failures come back as a JSON `{error: ...}` body
+    the agent can read rather than a transport exception."""
+    try:
+        return json.dumps(fn(_client_or_raise()), indent=2, default=str)
+    except SmolduckError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
+
+
+# ------------------------------------------------------------------- resources
+# Resources let an agent *read* workspace state by URI (vs. tools, which act).
+# Each is backed by the same loopback backend the tools use.
+
+
+@mcp.resource("smolduck://sources")
+def sources_resource() -> str:
+    """The registered data sources (DuckDB views) in the connected workspace."""
+    return _resource(lambda c: c.list_sources())
+
+
+@mcp.resource("smolduck://notebooks")
+def notebooks_resource() -> str:
+    """Summaries of every saved notebook (id, title, cell_count, timestamps)."""
+    return _resource(lambda c: c.list_notebooks())
+
+
+@mcp.resource("smolduck://charts")
+def charts_resource() -> str:
+    """Every pinned chart artifact (title, originating query, encoding, Plotly spec)."""
+    return _resource(lambda c: c.list_charts())
+
+
+@mcp.resource("smolduck://notebook/{notebook_id}")
+def notebook_resource(notebook_id: str) -> str:
+    """One notebook's full content: its ordered cells and each cell's cached result."""
+    return _resource(lambda c: c.get_notebook(notebook_id))
+
+
+@mcp.resource("smolduck://chart/{chart_id}")
+def chart_resource(chart_id: str) -> str:
+    """One pinned chart: its query, encoding config, and full Plotly spec."""
+    return _resource(lambda c: c.get_chart(chart_id))
+
+
+@mcp.resource("smolduck://schema/{view}")
+def schema_resource(view: str) -> str:
+    """The columns and types of one view (runs DESCRIBE)."""
+    safe = view.replace('"', '""')
+    return _resource(lambda c: c.query(f'DESCRIBE "{safe}"'))
 
 
 # ----------------------------------------------------------------- read/analyze

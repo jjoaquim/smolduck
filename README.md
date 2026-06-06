@@ -280,10 +280,12 @@ _"what predicts churn here?"_ and review the cell it proposes.
 ## CLI
 
 ```
-smolduck run [path]      boot the workbench against a workspace folder (default: .)
-smolduck stop [path]     stop the running session; the workspace is left intact
-smolduck status [path]   show the running session for a workspace
-smolduck build           (re)build the microVM image + pack
+smolduck run [path]                boot the workbench against a workspace folder (default: .)
+smolduck stop [path]               stop the running session; the workspace is left intact
+smolduck status [path]             show the running session for a workspace
+smolduck replay <notebook> [path]  re-run a saved notebook headless against the running
+                                   session; add --out report.html to write a report
+smolduck build                     (re)build the microVM image + pack
 
 Flags (run):
   --port <n>     UI port (default: 4290)
@@ -332,8 +334,11 @@ smolduck run ./your-data        # the MCP server attaches to this session
 }
 ```
 
+The agent reads workspace state through **resources** (`smolduck://sources`,
+`smolduck://notebook/{id}`, `smolduck://schema/{view}`, …) and acts through tools.
 The server talks only to `127.0.0.1` (the backend is unauthenticated — don't expose
-it remotely). See [`mcp/README.md`](mcp/README.md) for the full tool list.
+it remotely). See the [agent quickstart](docs/agent-quickstart.md) for an end-to-end
+recipe, and [`mcp/README.md`](mcp/README.md) for the full tool + resource list.
 
 ## Security model
 
@@ -343,6 +348,12 @@ and are **off on the host** unless a developer explicitly opts in with
 `SMOLDUCK_ALLOW_HOST_KERNEL=1` for native development. The VM has no outbound network by
 default; `smolduck stop` deletes the VM, leaving zero processes or files on your host
 outside the workspace folder.
+
+This boundary is **visible**, not just promised. `smolduck run` prints the sandbox's egress
+policy at boot (`offline`, host-loopback for Ollama, or `api.anthropic.com` only), the
+workbench shows a live egress badge with a count of the analyst's outbound calls (logged to
+`.smolduck/egress.jsonl`), and `smolduck stop` prints a teardown proof of what was destroyed
+versus what persists.
 
 ## Development
 

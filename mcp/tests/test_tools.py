@@ -115,3 +115,33 @@ def test_tool_uses_injected_client(monkeypatch):
         assert box["path"] == "/api/query" and 'DESCRIBE "my""view"' in box["body"]["sql"]
     finally:
         server._client = None
+
+
+# --------------------------------------------------------------- server resources
+
+def test_resource_returns_json_text_from_client():
+    box = {}
+    server._client = _client(_seen(box, payload={"id": "nb1", "cells": [{"kind": "sql"}]}))
+    try:
+        text = server.notebook_resource("nb1")
+        assert box["method"] == "GET" and box["path"] == "/api/notebooks/nb1"
+        assert json.loads(text) == {"id": "nb1", "cells": [{"kind": "sql"}]}  # JSON *text*, not a dict
+    finally:
+        server._client = None
+
+
+def test_schema_resource_describes_view():
+    box = {}
+    server._client = _client(_seen(box, payload={"columns": [{"name": "a", "type": "INTEGER"}]}))
+    try:
+        server.schema_resource('my"view')
+        assert box["path"] == "/api/query" and 'DESCRIBE "my""view"' in box["body"]["sql"]
+    finally:
+        server._client = None
+
+
+def test_resource_error_is_json_body(monkeypatch):
+    server._client = None
+    server._cfg["workspace"], server._cfg["url"] = "/nonexistent-ws", None
+    text = server.charts_resource()
+    assert "error" in json.loads(text) and "smolduck run" in text

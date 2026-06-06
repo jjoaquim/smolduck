@@ -52,6 +52,18 @@ Create artifacts (no deletes):
 - `run_ml_experiment(source_id, features, target?, task?, test_size?, k?)`
 - `export_report(notebook_id, out_path?)`, `export_data(sql, format?, out_path?)`
 
+## Resources
+
+Tools *act*; resources let the agent *read* workspace state by URI (each returns
+JSON):
+
+- `smolduck://sources`, `smolduck://notebooks`, `smolduck://charts` — the catalogs
+- `smolduck://notebook/{id}` — one notebook (cells + cached results)
+- `smolduck://chart/{id}` — one pinned chart (query, encoding, Plotly spec)
+- `smolduck://schema/{view}` — a view's columns and types (DESCRIBE)
+
+See [`../docs/agent-quickstart.md`](../docs/agent-quickstart.md) for an end-to-end recipe.
+
 ## Security
 
 The smolduck backend is **unauthenticated** on its port. This server only ever talks

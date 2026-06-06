@@ -37,7 +37,7 @@ function SourceItem({ source, onPick, onProfile, onMl }) {
   `;
 }
 
-export function Catalog({ catalog, loading, onPick, onProfile, onMl, onRegister, registering }) {
+export function Catalog({ catalog, loading, onPick, onProfile, onMl, onRegister, registering, onLoadExample, loadingExample }) {
   return html`
     <aside class="catalog">
       <div class="rail-head">
@@ -54,6 +54,12 @@ export function Catalog({ catalog, loading, onPick, onProfile, onMl, onRegister,
             <button class="btn" onClick=${onRegister} disabled=${registering}>
               Scan this folder
             </button>
+            ${onLoadExample &&
+            html`<div class="rail-or">or try a demo</div>
+              <button class="btn-ghost" onClick=${onLoadExample} disabled=${loadingExample}
+                title="generate a small built-in sales dataset to explore">
+                ${loadingExample ? "loading…" : "＋ Load example data"}
+              </button>`}
           </div>`
         : html`<ul class="cat-list">
             ${catalog.map(

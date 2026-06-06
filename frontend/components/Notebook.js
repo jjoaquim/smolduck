@@ -29,7 +29,7 @@ function summarize(nb) {
   };
 }
 
-export function Notebook({ catalog, pick, kernelEnabled, agentStatus }) {
+export function Notebook({ catalog, pick, injectSql, kernelEnabled, agentStatus }) {
   const agentEnabled = !!(agentStatus && agentStatus.enabled);
   const [nb, setNb] = useState(null);
   const [notebooks, setNotebooks] = useState([]);
@@ -42,6 +42,7 @@ export function Notebook({ catalog, pick, kernelEnabled, agentStatus }) {
   const nbRef = useRef(null);
   const saveTimer = useRef(null);
   const lastPick = useRef(null);
+  const lastInject = useRef(null);
 
   // ---- persistence -----------------------------------------------------
   function save(next) {
@@ -178,13 +179,23 @@ export function Notebook({ catalog, pick, kernelEnabled, agentStatus }) {
   async function runSql(cellId, cell) {
     setRunning((r) => ({ ...r, [cellId]: true }));
     setErrors((e) => ({ ...e, [cellId]: null }));
+    let ok = true;
+    let result = null;
     try {
-      const result = await api.query(cell.source);
+      result = await api.query(cell.source);
       commit(patchCell(cellId, { last_result: result }), { immediate: true });
     } catch (err) {
+      ok = false;
       setErrors((e) => ({ ...e, [cellId]: err.message }));
     } finally {
       setRunning((r) => ({ ...r, [cellId]: false }));
+    }
+    // Record the run in query history (best-effort; never blocks the cell).
+    if ((cell.source || "").trim()) {
+      api
+        .addHistory({ sql: cell.source, ok, row_count: result ? result.row_count : null,
+          elapsed_ms: result ? result.elapsed_ms : null })
+        .catch(() => {});
     }
   }
 
@@ -271,6 +282,14 @@ export function Notebook({ catalog, pick, kernelEnabled, agentStatus }) {
     addCell("sql", `SELECT *\nFROM ${pick.view_name}\nLIMIT 100;`);
     // eslint-disable-next-line
   }, [pick]);
+
+  // Command palette "recent query" → append that SQL as a new cell.
+  useEffect(() => {
+    if (!injectSql || injectSql === lastInject.current || !nbRef.current) return;
+    lastInject.current = injectSql;
+    addCell("sql", injectSql.sql);
+    // eslint-disable-next-line
+  }, [injectSql]);
 
   if (!nb) {
     return html`<div class="nb-loading">loading notebook…</div>`;

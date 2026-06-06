@@ -9,6 +9,7 @@ DuckDB reader, so large results never need to fit in memory at once.
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 import time
 
@@ -46,6 +47,29 @@ def _strip_trailing_semicolons(sql: str) -> str:
     return sql.strip().rstrip(";").strip()
 
 
+_CARET_RE = re.compile(r"^LINE (\d+):.*\n( *)\^", re.MULTILINE)
+
+
+def _sql_error_detail(exc: Exception) -> str:
+    """A readable error for the workbench.
+
+    DuckDB already names the error class (`Parser Error:` / `Catalog Error:` /
+    `Binder Error:`) and often appends a `LINE n:` pointer with a `^` caret plus
+    candidate-name hints ("Did you mean …"). We keep all of that verbatim — the UI
+    renders it monospace + pre-wrapped so the caret lines up under the SQL — and,
+    when a caret is present, prepend a one-line `line N, column M` header so the
+    locus is obvious even at a glance."""
+    msg = str(exc).strip()
+    m = _CARET_RE.search(msg)
+    if m:
+        line = int(m.group(1))
+        # The caret sits under the reprinted source, whose left margin is the
+        # `LINE n: ` label; the column is the caret's offset past that label.
+        col = max(1, len(m.group(2)) - len(f"LINE {line}: ") + 1)
+        return f"SQL error at line {line}, column {col}:\n{msg}"
+    return msg
+
+
 @router.post("/api/query")
 def run_query(req: QueryRequest, state: AppState = Depends(get_state)) -> dict:
     sql = req.sql.strip()
@@ -64,7 +88,7 @@ def run_query(req: QueryRequest, state: AppState = Depends(get_state)) -> dict:
         try:
             rel = state.db.sql(sql)
         except Exception as exc:
-            raise HTTPException(status_code=400, detail=f"query error: {exc}") from exc
+            raise HTTPException(status_code=400, detail=_sql_error_detail(exc)) from exc
 
         if rel is None:
             # Non-result statement (DDL / SET / PRAGMA / COPY ...).
@@ -83,7 +107,7 @@ def run_query(req: QueryRequest, state: AppState = Depends(get_state)) -> dict:
         try:
             fetched = rel.limit(cap + 1, offset=offset).fetchall()
         except Exception as exc:
-            raise HTTPException(status_code=400, detail=f"query error: {exc}") from exc
+            raise HTTPException(status_code=400, detail=_sql_error_detail(exc)) from exc
 
     truncated = len(fetched) > cap
     rows = [[_jsonable(v) for v in row] for row in fetched[:cap]]

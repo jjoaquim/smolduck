@@ -109,11 +109,23 @@ class SmolduckClient:
             body["timeout"] = timeout
         return self._json("POST", "/api/kernel/exec", json=body)
 
+    def list_notebooks(self) -> dict:
+        return self._json("GET", "/api/notebooks")
+
+    def get_notebook(self, notebook_id: str) -> dict:
+        return self._json("GET", f"/api/notebooks/{notebook_id}")
+
     def create_notebook(self, title: str | None, cells: list[dict]) -> dict:
         body: dict[str, Any] = {"cells": cells}
         if title:
             body["title"] = title
         return self._json("POST", "/api/notebooks", json=body)
+
+    def list_charts(self) -> dict:
+        return self._json("GET", "/api/charts")
+
+    def get_chart(self, chart_id: str) -> dict:
+        return self._json("GET", f"/api/charts/{chart_id}")
 
     def create_chart(self, query: str, config: dict, spec: dict, title: str | None = None) -> dict:
         body: dict[str, Any] = {"query": query, "config": config, "spec": spec}

@@ -45,6 +45,15 @@ body {
   padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line);
 }
 .topbar-spacer { flex: 1; }
+.egress-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: "JetBrains Mono", monospace; font-size: 11px;
+  padding: 3px 9px; border-radius: 6px; margin-right: 10px;
+  border: 1px solid var(--line); cursor: default; white-space: nowrap;
+}
+.egress-badge.locked { color: var(--teal); border-color: var(--teal-deep); background: rgba(84, 199, 176, 0.08); }
+.egress-badge.open { color: var(--amber); border-color: var(--amber); background: rgba(246, 166, 35, 0.08); }
+.egress-icon { font-size: 11px; line-height: 1; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal-deep); }
 .status-dot.err { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
 
@@ -229,6 +238,20 @@ body {
 .chart-builder .chart-empty { border-top: none; }
 
 /* ---------- pinned charts overlay ---------- */
+/* ---------- command palette ---------- */
+.palette-overlay { position: fixed; inset: 0; background: rgba(6,5,4,0.62); z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 20px 20px; }
+.palette-panel { background: var(--surface); border: 1px solid var(--line-bright); border-radius: 12px; width: min(620px, 100%); max-height: 64vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+.palette-input { width: 100%; box-sizing: border-box; background: var(--surface-2); color: var(--ink); border: none; border-bottom: 1px solid var(--line); padding: 13px 16px; font-size: 14px; outline: none; }
+.palette-list { list-style: none; margin: 0; padding: 6px; overflow: auto; }
+.palette-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 7px; cursor: pointer; }
+.palette-item.sel { background: var(--surface-2); }
+.palette-badge { font-size: 11px; color: var(--faint); width: 14px; text-align: center; flex: none; }
+.palette-badge.history { color: var(--teal); }
+.palette-label { flex: 1; font-size: 13px; color: var(--ink); font-family: "JetBrains Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palette-hint { font-size: 11px; color: var(--faint); flex: none; }
+.palette-empty { padding: 14px; color: var(--faint); font-size: 13px; text-align: center; }
+.rail-or { color: var(--faint); font-size: 12px; margin: 12px 0 6px; }
+
 .pinned-overlay { position: fixed; inset: 0; background: rgba(6,5,4,0.72); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow: auto; }
 .pinned-panel { background: var(--surface); border: 1px solid var(--line-bright); border-radius: 12px; width: min(960px, 100%); max-height: 86vh; overflow: auto; }
 .pinned-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }

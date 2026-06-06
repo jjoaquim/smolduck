@@ -76,3 +76,38 @@ def test_status_reports_real_key(tmp_path, monkeypatch):
     with TestClient(create_app()) as c:
         s = c.get("/api/agent/status").json()
         assert s["enabled"] is True and s["fake"] is False
+
+
+def test_egress_offline_by_default(tmp_path, monkeypatch):
+    _ws(tmp_path, monkeypatch)
+    with TestClient(create_app()) as c:
+        e = c.get("/api/agent/egress").json()
+        assert e["policy"] == "offline" and e["allowed_hosts"] == []
+        assert e["call_count"] == 0 and e["last_call_at"] is None
+
+
+def test_egress_reports_anthropic_host(tmp_path, monkeypatch):
+    _ws(tmp_path, monkeypatch)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-xyz")
+    with TestClient(create_app()) as c:
+        e = c.get("/api/agent/egress").json()
+        assert e["policy"] == "allow-host" and e["allowed_hosts"] == ["api.anthropic.com"]
+        assert e["provider"] == "anthropic"
+
+
+def test_egress_log_counts_calls(tmp_path, monkeypatch):
+    _ws(tmp_path, monkeypatch)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    def fake_llm(messages, system, tools):
+        return {"stop_reason": "tool_use", "blocks": [
+            {"type": "tool_use", "id": "t2", "name": "propose_cell",
+             "input": {"kind": "sql", "source": "SELECT 1", "explanation": "x"}}]}
+
+    monkeypatch.setattr(agent, "_llm_call", fake_llm)
+    with TestClient(create_app()) as c:
+        c.post("/api/sources", json={"path": "."})
+        assert c.get("/api/agent/egress").json()["call_count"] == 0
+        c.post("/api/agent/ask", json={"question": "anything?"})
+        e = c.get("/api/agent/egress").json()
+        assert e["call_count"] == 1 and e["last_call_at"] is not None

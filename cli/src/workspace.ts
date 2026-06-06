@@ -20,6 +20,10 @@ export interface Session {
   startedAt: string;
   /** smolvm machine name backing this session (mode "vm"). */
   vmName?: string;
+  /** Network egress the VM was created with — recorded so `stop` can prove what
+   *  the sandbox was allowed to reach (the "visible sandbox" receipt). */
+  egressPolicy?: string;
+  egressHosts?: string[];
 }
 
 const SMOLDUCK_DIR = ".smolduck";

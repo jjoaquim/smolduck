@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { analystEgressFlags } from "./smolvm.ts";
+import { analystEgressFlags, egressPolicy } from "./smolvm.ts";
 
 // The session VM is offline by default; these flags are the *only* egress the
 // analyst opens. Mirrors providers.py provider selection (explicit var wins,
@@ -44,5 +44,29 @@ describe("analystEgressFlags", () => {
     expect(
       analystEgressFlags({ SMOLDUCK_AGENT_FAKE: "1", SMOLDUCK_LLM_PROVIDER: "ollama" }),
     ).toEqual([]);
+  });
+});
+
+// The human-readable read of the same flags — drives the boot receipt, the
+// teardown proof, and (via the backend) the UI badge, so it must track the flags.
+describe("egressPolicy", () => {
+  test("no analyst → offline, no hosts", () => {
+    const p = egressPolicy({});
+    expect(p.policy).toBe("offline");
+    expect(p.hosts).toEqual([]);
+    expect(p.label).toContain("offline");
+  });
+
+  test("ollama → local-only, loopback host", () => {
+    const p = egressPolicy({ SMOLDUCK_LLM_PROVIDER: "ollama" });
+    expect(p.policy).toBe("local-only");
+    expect(p.hosts).toEqual(["127.0.0.1"]);
+  });
+
+  test("anthropic key → allow-host api.anthropic.com", () => {
+    const p = egressPolicy({ ANTHROPIC_API_KEY: "sk-ant" });
+    expect(p.policy).toBe("allow-host");
+    expect(p.hosts).toEqual(["api.anthropic.com"]);
+    expect(p.label).toContain("api.anthropic.com");
   });
 });

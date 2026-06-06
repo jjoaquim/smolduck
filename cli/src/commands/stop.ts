@@ -23,5 +23,15 @@ export function stopCommand(opts: CliOptions): void {
     console.log(`no recorded session; ensured VM '${name}' is stopped. workspace intact: ${workspace}`);
     return;
   }
-  console.log(`stopped smolduck (VM '${name}'). workspace left intact: ${workspace}`);
+
+  // Teardown proof: make disposability visible — what was destroyed, what the
+  // sandbox could reach, and what (only) persists.
+  console.log(`stopped smolduck (VM '${name}').`);
+  console.log("  ✓ microVM destroyed — kernel and any agent/notebook code went with it");
+  if (session.egressHosts && session.egressHosts.length > 0) {
+    console.log(`  ✓ network egress was limited to: ${session.egressHosts.join(", ")}`);
+  } else {
+    console.log("  ✓ the sandbox had no network egress");
+  }
+  console.log(`  ✓ workspace left intact (the only thing that persists): ${workspace}`);
 }

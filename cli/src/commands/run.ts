@@ -13,7 +13,7 @@ import {
   stalePackSources,
   writeSession,
 } from "../workspace.ts";
-import { bootVm, buildImage, stopVm, vmName, vmRunning } from "../vm/smolvm.ts";
+import { bootVm, buildImage, egressPolicy, stopVm, vmName, vmRunning } from "../vm/smolvm.ts";
 
 const HEALTH_TIMEOUT_MS = 60_000; // VM boot + extension load is slower than native
 
@@ -64,11 +64,14 @@ export async function runCommand(opts: CliOptions): Promise<void> {
   const token = randomBytes(16).toString("hex");
   const url = `http://127.0.0.1:${port}/?t=${token}`;
 
+  const egress = egressPolicy(agentEnv());
+
   console.log(`smolduck · workspace ${workspace}`);
   console.log(`  booting microVM (${name})…`);
   if (opts.readonly) {
     console.log("  --readonly: workspace mounted read-only; session artifacts are discarded on stop");
   }
+  console.log(`  🔒 sandbox egress: ${egress.label}`);
 
   let handle;
   try {
@@ -97,6 +100,8 @@ export async function runCommand(opts: CliOptions): Promise<void> {
     vmName: name,
     readonly: !!opts.readonly,
     startedAt: new Date().toISOString(),
+    egressPolicy: egress.policy,
+    egressHosts: egress.hosts,
   });
 
   let tornDown = false;

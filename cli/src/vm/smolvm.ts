@@ -199,6 +199,31 @@ export function analystEgressFlags(env: Record<string, string>): string[] {
   return [];
 }
 
+export interface EgressPolicy {
+  /** Machine-readable policy: `offline` | `local-only` | `allow-host`. */
+  policy: "offline" | "local-only" | "allow-host";
+  /** The hosts the VM may reach (empty when offline; `127.0.0.1` for local-only). */
+  hosts: string[];
+  /** A one-line human summary for the boot receipt / teardown proof. */
+  label: string;
+}
+
+/** Human-readable read of the egress flags the VM was (or would be) created with —
+ *  the data behind the "visible sandbox" boot receipt and teardown proof. Derived
+ *  from `analystEgressFlags` so it can never disagree with what was actually opened. */
+export function egressPolicy(env: Record<string, string>): EgressPolicy {
+  const flags = analystEgressFlags(env);
+  if (flags.includes("--outbound-localhost-only")) {
+    return { policy: "local-only", hosts: ["127.0.0.1"], label: "local-only — host loopback (Ollama), no internet" };
+  }
+  const at = flags.indexOf("--allow-host");
+  if (at >= 0 && flags[at + 1]) {
+    const host = flags[at + 1];
+    return { policy: "allow-host", hosts: [host], label: `${host} only — no other network egress` };
+  }
+  return { policy: "offline", hosts: [], label: "offline — no network egress" };
+}
+
 /** Stop and delete the session VM (clean, disposable teardown). */
 export function stopVm(name: string): void {
   deleteMachine(name);

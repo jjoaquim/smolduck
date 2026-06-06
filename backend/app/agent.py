@@ -20,12 +20,20 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from .kernel import get_kernel
-from .providers import ProviderError, get_provider, provider_info
+from .manifest import smolduck_dir
+from .providers import (
+    ProviderError,
+    egress_policy,
+    get_provider,
+    provider_host,
+    provider_info,
+)
 from .sandbox import kernel_enabled
 from .state import AppState, get_state
 
@@ -33,6 +41,29 @@ router = APIRouter(prefix="/api/agent", tags=["agent"])
 
 MAX_STEPS = 8
 SQL_PREVIEW_ROWS = 50
+EGRESS_LOG = "egress.jsonl"
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _log_egress(state: AppState, provider: str, model: str, host: str | None, ok: bool, error: str | None = None) -> None:
+    """Append one line per outbound LLM call to `.smolduck/egress.jsonl`.
+
+    This is the audit trail behind the "visible sandbox" badge: the only outbound
+    calls smolduck itself makes are the analyst's, and every one is recorded here.
+    Best-effort — a logging failure must never break the analyst."""
+    rec = {"timestamp": _now_iso(), "provider": provider, "model": model, "host": host, "ok": ok}
+    if error:
+        rec["error"] = error[:200]
+    try:
+        path = smolduck_dir(state.workspace) / EGRESS_LOG
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a") as f:
+            f.write(json.dumps(rec) + "\n")
+    except Exception:  # noqa: BLE001 - never let auditing break the request
+        pass
 
 TOOLS = [
     {"name": "list_sources", "description": "List registered views with their columns and types.",
@@ -159,8 +190,18 @@ def _orchestrate(state: AppState, question: str, llm_call) -> dict:
     messages = [{"role": "user", "content": f"Catalog:\n{schema}\n\nQuestion: {question}"}]
     transcript = []
 
+    provider = get_provider()  # non-None: agent_ask gates on it before calling here
+    pname = provider.name if provider else "?"
+    pmodel = provider.model if provider else "?"
+    phost = provider_host(provider)
+
     for _ in range(MAX_STEPS):
-        r = llm_call(messages, SYSTEM, TOOLS)
+        try:
+            r = llm_call(messages, SYSTEM, TOOLS)
+        except ProviderError as exc:
+            _log_egress(state, pname, pmodel, phost, ok=False, error=str(exc))
+            raise
+        _log_egress(state, pname, pmodel, phost, ok=True)
         blocks = r["blocks"]
         messages.append({"role": "assistant", "content": _blocks_to_content(blocks)})
         tool_uses = [b for b in blocks if b["type"] == "tool_use"]
@@ -220,6 +261,37 @@ def agent_status() -> dict:
     out = {"enabled": info is not None or fake, "fake": fake}
     if info:
         out.update(info)  # provider, model
+    return out
+
+
+@router.get("/egress")
+def agent_egress(state: AppState = Depends(get_state)) -> dict:
+    """The sandbox's network posture, plus a count of outbound analyst calls made
+    this session — the data behind the "visible sandbox" badge. With no analyst
+    configured this reports `offline` / 0 calls (the default disposable VM has no
+    egress at all)."""
+    out = dict(egress_policy())  # policy, allowed_hosts
+    info = provider_info()
+    if info:
+        out.update(info)  # provider, model
+
+    count, last = 0, None
+    path = smolduck_dir(state.workspace) / EGRESS_LOG
+    if path.exists():
+        try:
+            for line in path.read_text().splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                count += 1
+                try:
+                    last = json.loads(line).get("timestamp", last)
+                except Exception:  # noqa: BLE001 - tolerate a partial trailing line
+                    pass
+        except Exception:  # noqa: BLE001
+            pass
+    out["call_count"] = count
+    out["last_call_at"] = last
     return out
 
 
